@@ -43,17 +43,25 @@ export default function Home(props) {
     const map = new mapboxgl.Map({
       container: 'my-map',
       style: 'mapbox://styles/mapbox/streets-v11',
+      center: [120.9522975, 14.3975095],
+      zoom: 12.5,
+      pitch: 45,
+      maxBounds: [
+        [120.99252075406866, 14.35991630698487], // Southwest coordinates
+        [120.9534537855, 14.441045239039855], // Northeast coordinates
+      ],
     });
 
-    map.addControl(
-      new mapboxgl.GeolocateControl({
-        positionOptions: {
-          enableHighAccuracy: true,
-        },
-        trackUserLocation: true,
-      })
-    );
+    // map.addControl(
+    //   new mapboxgl.GeolocateControl({
+    //     positionOptions: {
+    //       enableHighAccuracy: true,
+    //     },
+    //     trackUserLocation: true,
+    //   })
+    // );
   }, []);
+
   const getMorePosts = async () => {
     setLoading(true);
     const last = posts[posts.length - 1];
@@ -92,7 +100,7 @@ export default function Home(props) {
       </Head>
 
       <main>
-        <div id="my-map" style={{ height: 500, width: 500 }} />
+        <div id="my-map" style={{ height: 500, width: 1200 }} />
         <PostFeed posts={posts} />
 
         {!loading && !postsEnd && (
