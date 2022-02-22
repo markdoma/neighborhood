@@ -1,14 +1,13 @@
 import { auth, firestore, googleAuthProvider } from '../lib/firebase';
 import { UserContext } from '../lib/context';
 import Metatags from '../components/Metatags';
+import Geo from '../components/GeoLocation';
 
 import { useEffect, useState, useCallback, useContext } from 'react';
 import debounce from 'lodash.debounce';
 
 export default function Enter(props) {
   const { user, details } = useContext(UserContext);
-
-  console.log(`context ${user}`);
 
   // 1. user signed out <SignInButton />
   // 2. user signed in, but missing username <UsernameForm />
@@ -55,14 +54,16 @@ function UsernameForm() {
   const [inputValues, setInputValues] = useState({
     firstName: '',
     lastName: '',
+    latitude: '',
+    longitude: '',
   });
   // const [isValid, setIsValid] = useState(false);
   // const [loading, setLoading] = useState(false);
   // const [detailsComplete, setDetailsComplete] = useState(false);
-  const { user, details } = useContext(UserContext);
 
-  console.log(`form ${details}`);
-  console.log(`user ${user}`);
+  const [lat, setLat] = useState(null);
+  const [lng, setLng] = useState(null);
+  const { user, details } = useContext(UserContext);
 
   const onSubmit = async (e) => {
     e.preventDefault();
@@ -81,6 +82,8 @@ function UsernameForm() {
       displayName: user.displayName,
       firstName: inputValues.firstName,
       lastName: inputValues.lastName,
+      latitude: lat,
+      longitude: lng,
     });
     batch.set(userDetailsDoc, {
       uid: user.uid,
@@ -119,6 +122,7 @@ function UsernameForm() {
   //   []
   // );
 
+  console.log(lat);
   return (
     !details && (
       <section>
@@ -136,15 +140,29 @@ function UsernameForm() {
             // value={inputValues}
             onChange={onChange}
           />
+          <input
+            name="latitude"
+            placeholder="Latitude"
+            value={lat}
+            // onChange={onChange}
+          />
+          <input
+            name="longitude"
+            placeholder="Longitude"
+            value={lng}
+            // onChange={onChange}
+          />
           {/* <UsernameMessages
             username={formValue}
             isValid={isValid}
             loading={loading}
           /> */}
+
           <button type="submit" className="btn-green">
             Save Profile
           </button>
         </form>
+        <Geo latData={setLat} longData={setLng} />
       </section>
     )
   );
