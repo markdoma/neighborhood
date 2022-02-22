@@ -6,7 +6,9 @@ import { useEffect, useState, useCallback, useContext } from 'react';
 import debounce from 'lodash.debounce';
 
 export default function Enter(props) {
-  const { user, username } = useContext(UserContext);
+  const { user, details } = useContext(UserContext);
+
+  console.log(`context ${user}`);
 
   // 1. user signed out <SignInButton />
   // 2. user signed in, but missing username <UsernameForm />
@@ -15,8 +17,11 @@ export default function Enter(props) {
     <main>
       <Metatags title="Enter" description="Sign up for this amazing app!" />
       {user ? (
-        !username ? (
-          <UsernameForm />
+        !details ? (
+          <>
+            <UsernameForm />
+            <SignOutButton />
+          </>
         ) : (
           <SignOutButton />
         )
@@ -47,99 +52,98 @@ function SignOutButton() {
 
 // Username form
 function UsernameForm() {
-  const [formValue, setFormValue] = useState('');
-  const [isValid, setIsValid] = useState(false);
-  const [loading, setLoading] = useState(false);
+  const [inputValues, setInputValues] = useState({
+    firstName: '',
+    lastName: '',
+  });
+  // const [isValid, setIsValid] = useState(false);
+  // const [loading, setLoading] = useState(false);
+  // const [detailsComplete, setDetailsComplete] = useState(false);
+  const { user, details } = useContext(UserContext);
 
-  const { user, username } = useContext(UserContext);
+  console.log(`form ${details}`);
+  console.log(`user ${user}`);
 
   const onSubmit = async (e) => {
     e.preventDefault();
 
     // Create refs for both documents
     const userDoc = firestore.doc(`users/${user.uid}`);
-    const usernameDoc = firestore.doc(`usernames/${formValue}`);
+    // const usernameDoc = firestore.doc(`usernames/${formValue}`);
+    const userDetailsDoc = firestore.doc(`details/${user.uid}`);
 
     // Commit both docs together as a batch write.
     const batch = firestore.batch();
     batch.set(userDoc, {
-      username: formValue,
+      // username: formValue,
+      details: true,
       photoURL: user.photoURL,
       displayName: user.displayName,
+      firstName: inputValues.firstName,
+      lastName: inputValues.lastName,
     });
-    batch.set(usernameDoc, { uid: user.uid });
+    batch.set(userDetailsDoc, {
+      uid: user.uid,
+      firstName: inputValues.firstName,
+      lastName: inputValues.lastName,
+    });
 
     await batch.commit();
   };
 
   const onChange = (e) => {
-    // Force form value typed in form to match correct format
-    const val = e.target.value.toLowerCase();
-    const re = /^(?=[a-zA-Z0-9._]{3,15}$)(?!.*[_.]{2})[^_.].*[^_.]$/;
-
-    // Only set form value if length is < 3 OR it passes regex
-    if (val.length < 3) {
-      setFormValue(val);
-      setLoading(false);
-      setIsValid(false);
-    }
-
-    if (re.test(val)) {
-      setFormValue(val);
-      setLoading(true);
-      setIsValid(false);
-    }
+    const { name, value } = e.target;
+    setInputValues({ ...inputValues, [name]: value });
   };
+
+  // console.log(inputValues.firstName);
 
   //
 
-  useEffect(() => {
-    checkUsername(formValue);
-  }, [formValue]);
+  // useEffect(() => {
+  //   checkUsername(formValue);
+  // }, [formValue]);
 
   // Hit the database for username match after each debounced change
   // useCallback is required for debounce to work
-  const checkUsername = useCallback(
-    debounce(async (username) => {
-      if (username.length >= 3) {
-        const ref = firestore.doc(`usernames/${username}`);
-        const { exists } = await ref.get();
-        console.log('Firestore read executed!');
-        setIsValid(!exists);
-        setLoading(false);
-      }
-    }, 500),
-    []
-  );
+  // const checkUsername = useCallback(
+  //   debounce(async (username) => {
+  //     if (username.length >= 3) {
+  //       const ref = firestore.doc(`usernames/${username}`);
+  //       const { exists } = await ref.get();
+  //       console.log('Firestore read executed!');
+  //       setIsValid(!exists);
+  //       setLoading(false);
+  //     }
+  //   }, 500),
+  //   []
+  // );
 
   return (
-    !username && (
+    !details && (
       <section>
-        <h3>Choose Username</h3>
+        <h3>Profile Details</h3>
         <form onSubmit={onSubmit}>
           <input
-            name="username"
-            placeholder="myname"
-            value={formValue}
+            name="firstName"
+            placeholder="FirstName"
+            // value={}
             onChange={onChange}
           />
-          <UsernameMessage
+          <input
+            name="lastName"
+            placeholder="LastName"
+            // value={inputValues}
+            onChange={onChange}
+          />
+          {/* <UsernameMessages
             username={formValue}
             isValid={isValid}
             loading={loading}
-          />
-          <button type="submit" className="btn-green" disabled={!isValid}>
-            Choose
+          /> */}
+          <button type="submit" className="btn-green">
+            Save Profile
           </button>
-
-          <h3>Debug State</h3>
-          <div>
-            Username: {formValue}
-            <br />
-            Loading: {loading.toString()}
-            <br />
-            Username Valid: {isValid.toString()}
-          </div>
         </form>
       </section>
     )

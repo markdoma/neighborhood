@@ -6,9 +6,9 @@ import { auth } from '../lib/firebase';
 
 // Top navbar
 export default function Navbar() {
-  const { user, username } = useContext(UserContext);
+  const { user, details } = useContext(UserContext);
 
-  console.log(username);
+  console.log(user);
 
   return (
     <nav className="navbar">
@@ -20,7 +20,7 @@ export default function Navbar() {
         </li>
 
         {/* user is signed-in and has username */}
-        {username && (
+        {details && (
           <>
             <li>
               <Link href="/admin">
@@ -32,7 +32,7 @@ export default function Navbar() {
             </button>
 
             <li>
-              <Link href={`/${username}`}>
+              <Link href="/">
                 <img src={user?.photoURL} />
               </Link>
             </li>
@@ -40,7 +40,7 @@ export default function Navbar() {
         )}
 
         {/* user is not signed OR has not created username */}
-        {!username && (
+        {!details && (
           <li>
             <Link href="/enter">
               <button className="btn-blue">Log in</button>
